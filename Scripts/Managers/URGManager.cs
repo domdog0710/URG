@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 // http://sourceforge.net/p/urgnetwork/wiki/top_jp/
@@ -257,8 +256,11 @@ public class URGManager : MonoBehaviour
                 //Color color = (dist < limit && dir.y > 0) ? cDetectColor : distanceColor;
                 //				Debug.DrawRay(Vector3.zero, dist * dir * scale, color);
                 //Debug.DrawRay(Vector3.zero, dist * -dir * scale, distanceColor);
-                Debug.DrawRay(this.transform.position, dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale), cDistanceColor);
-			}
+                Vector3 localDir = new Vector3(-dir.x * fXScaleMulti, -dir.y, -dir.z); // 感測器「局部」方向
+                Vector3 worldDir = transform.TransformDirection(localDir);             // 轉到世界方向
+                Debug.DrawRay(transform.position, (float)dist * fScale * worldDir, cDistanceColor);
+                //Debug.DrawRay(this.transform.position, dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale), cDistanceColor);
+            }
 		}
 
         //-----------------
@@ -456,20 +458,25 @@ public class URGManager : MonoBehaviour
 				//Debug.DrawRay(this.transform.position, _dist * -_dir * scale, gColor);
 			}
 
-			//Debug.DrawLine(dist0 * -dir0 * scale, dist1 * -dir1 * scale, gColor);
-			//Debug.DrawLine(this.transform.position, dist1 * -dir1 * scale, gColor);
-			//Debug.DrawRay(Vector3.zero, dist * -dir * scale, Color.green);
-			Debug.DrawRay(this.transform.position, dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale), Color.green);
+            //Debug.DrawLine(dist0 * -dir0 * scale, dist1 * -dir1 * scale, gColor);
+            //Debug.DrawLine(this.transform.position, dist1 * -dir1 * scale, gColor);
+            //Debug.DrawRay(Vector3.zero, dist * -dir * scale, Color.green);
+            Vector3 localDir = new Vector3(-dir.x * fXScaleMulti, -dir.y, -dir.z);
+            Vector3 worldDir = transform.TransformDirection(localDir);
+            Debug.DrawRay(transform.position, (float)dist * fScale * worldDir, Color.green);
+            //Debug.DrawRay(this.transform.position, dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale), Color.green);
 
 			if (PointP.childCount - 1 < i)
 			{
                 var point = Instantiate(PointPrefab, PointP);
 				point.GetComponent<PointerControl>().URGID = URGID;
-                point.transform.position = this.transform.position + (dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale));
+                point.transform.localPosition = LocalPoint(dist, dir);
+                //point.transform.position = this.transform.position + (dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale));
             }
 			else
 			{
-                PointP.GetChild(i).position = this.transform.position + (dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale));
+                PointP.GetChild(i).position = transform.TransformPoint(LocalPoint(dist, dir));
+                //PointP.GetChild(i).position = this.transform.position + (dist * new Vector3(-dir.x * fScale * fXScaleMulti, -dir.y * fScale, -dir.z * fScale));
             }
 
             iDrawCount++;
@@ -477,19 +484,25 @@ public class URGManager : MonoBehaviour
 
 		//DrawRect(detectAreaRect, Color.green);
 	}
-	//void DrawRect(Rect rect, Color color)
-	//{
-	//	Vector3 p0 = new Vector3(rect.x, rect.y, 0);
-	//	Vector3 p1 = new Vector3(rect.x + rect.width, rect.y, 0);
-	//	Vector3 p2 = new Vector3(rect.x + rect.width, rect.y + rect.height, 0);
-	//	Vector3 p3 = new Vector3(rect.x, rect.y + rect.height, 0);
-	//	Debug.DrawLine(p0, p1, color);
-	//	Debug.DrawLine(p1, p2, color);
-	//	Debug.DrawLine(p2, p3, color);
-	//	Debug.DrawLine(p3, p0, color);
-	//}
 
-	private bool gd_loop = false;
+    Vector3 LocalPoint(float distVal, Vector3 dirVec)
+    {
+        // 先組「局部」座標點（單位：公尺/Unity 單位）
+        return (float)distVal * fScale * new Vector3(-dirVec.x * fXScaleMulti, -dirVec.y, -dirVec.z);
+    }
+    //void DrawRect(Rect rect, Color color)
+    //{
+    //	Vector3 p0 = new Vector3(rect.x, rect.y, 0);
+    //	Vector3 p1 = new Vector3(rect.x + rect.width, rect.y, 0);
+    //	Vector3 p2 = new Vector3(rect.x + rect.width, rect.y + rect.height, 0);
+    //	Vector3 p3 = new Vector3(rect.x, rect.y + rect.height, 0);
+    //	Debug.DrawLine(p0, p1, color);
+    //	Debug.DrawLine(p1, p2, color);
+    //	Debug.DrawLine(p2, p3, color);
+    //	Debug.DrawLine(p3, p0, color);
+    //}
+
+    private bool gd_loop = false;
 
 	// PP
 //	MODL ... センサ型式情報
